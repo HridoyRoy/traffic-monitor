@@ -10,7 +10,7 @@ GREEN = Fore.GREEN
 RED   = Fore.RED
 RESET = Fore.RESET
 
-# NOTE: MAKING THE SAVED DIR MANUALLY FOR NOW
+# NOTE: MAKING THE SAVED DIR MANUALLY FOR NOW. Writing to files with append (a+) creates a file if none exists, but the dir needs to be made manually. Else python throws an error. 
 LOG_FILENUM = 0
 LOG_FILENAME = "./saved/log"
 LOG_LINE_READ = 0
@@ -34,6 +34,9 @@ def process_packet(packet):
     """
     This function is executed whenever a packet is sniffed
     """
+    global LOG_LINE_WRITE
+    global LOG_FILENAME
+    global LOG_FILENUM
     log_filename = LOG_FILENAME + str(LOG_FILENUM) + ".txt"
     logfile = open(log_filename, 'a+')
     if packet.haslayer(HTTPRequest):
