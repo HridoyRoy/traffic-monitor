@@ -13,6 +13,7 @@ RED   = Fore.RED
 RESET = Fore.RESET
 
 # NOTE: MAKING THE SAVED DIR MANUALLY FOR NOW. Writing to files with append (a+) creates a file if none exists, but the dir needs to be made manually. Else python throws an error. 
+# NOTE: TODO: Log file being reset makes it difficult to read old log file. We need to fix this. 
 LOG_FILENUM = 0
 LOG_FILENAME = "./saved/log"
 LOG_LINE_READ = 0
@@ -87,34 +88,46 @@ def aggregate_statistics():
     global INIT_STATS
     global INIT_SECTION_HITS
     global INIT_REVERSE_SECTION_HITS
-    # open stats (come back to this later, as for now you can just store in mem)
+    # open stats TODO: (come back to this later, as for now you can just store in mem)
+    
+    print("aggregating stats but not past the first return val")  
     
     # open log
     log_filename = LOG_FILENAME + str(LOG_FILENUM) + ".txt"
+    if not os.path.isfile(log_filename):
+        # just wait
+        return
+    print("aggregating stats")
     with open(log_filename) as log_file:
         for i, line in enumerate(log_file):
+            print("values are:" )
+            print(INIT_SECTION_HITS)
+            print(INIT_REVERSE_SECTION_HITS)
             if i == LOG_LINE_READ:
+                print("i is to be read: " + str(i))
                 # read and update read counter, and add to appropriate log locations
                 log_vals = line.split(":")
                 url = log_vals[0]
                 if url in INIT_SECTION_HITS:
                     num_hits = INIT_SECTION_HITS[url]
                     INIT_REVERSE_SECTION_HITS[num_hits].remove(url)
-                    if INIT_REVERSE_SECTION_HITS[num_hits + 1]:
+                    if INIT_REVERSE_SECTION_HITS.get(num_hits + 1):
                         INIT_REVERSE_SECTION_HITS[num_hits + 1].append(url)
                     else:
                         INIT_REVERSE_SECTION_HITS[num_hits + 1] = [url]
                     INIT_SECTION_HITS[url] += 1
                 else:
                     INIT_SECTION_HITS[url] = 1
-                    if INIT_REVERSE_SECTION_HITS[0]:
-                        INIT_REVERSE_SECTION_HITS[0] += [url]
+                    if INIT_REVERSE_SECTION_HITS.get(1):
+                        INIT_REVERSE_SECTION_HITS[1] += [url]
                     else:
-                        INIT_REVERSE_SECTION_HITS[0] = [url]
+                        INIT_REVERSE_SECTION_HITS[1] = [url]
                 #  update read counter
                 LOG_LINE_READ += 1
 
-    INIT_STATS["most_hits_section"] = INIT_REVERSE_SECTION_HITS[INIT_REVERSE_SECTION_HITS.keys().max()][0]
+    # must use .get, not [] because don't want a keyError if this value doesn't exist. We want None. 
+    # TODO: All in 1 line. Break up for readability?
+    INIT_STATS["most_hits_section"] = INIT_REVERSE_SECTION_HITS.get(max(list(INIT_REVERSE_SECTION_HITS)))[0]
     
     # display stats
     
