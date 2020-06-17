@@ -16,12 +16,16 @@ RESET = Fore.RESET
 # NOTE: TODO: Log file being reset makes it difficult to read old log file. We need to fix this. 
 LOG_FILENUM = 0
 LOG_FILENAME = "./saved/log"
+LOG_FILENUM_SWITCH_PAGE = 0
 LOG_LINE_READ = 0
 LOG_LINE_WRITE = 0
 STATS_FILE = "./saved/stats.txt"
 INIT_STATS = {"most_hits_section" : "", "some_stat" : 5}
 INIT_SECTION_HITS = {}
 INIT_REVERSE_SECTION_HITS = {}
+
+# Changing this to 10 for testing. I think 500 is decent irl
+LOG_FILESIZE = 10
 
 def sniff_packets(iface=None):
     """
@@ -43,7 +47,14 @@ def process_packet(packet):
     global LOG_LINE_WRITE
     global LOG_FILENAME
     global LOG_FILENUM
+    global LOG_FILENUM_SWITCH_PAGE
+    global LOG_FILESIZE
+
+    # check if we need to open a new log file
     log_filename = LOG_FILENAME + str(LOG_FILENUM) + ".txt"
+    if LOG_FILENUM < LOG_FILENUM_SWITCH_PAGE:
+        log_filename = LOG_FILENAME + str(LOG_FILENUM_SWITCH_PAGE) + ".txt"
+    
     logfile = open(log_filename, 'a+')
     if packet.haslayer(HTTPRequest):
         # if this packet is an HTTP Request
@@ -61,7 +72,7 @@ def process_packet(packet):
         LOG_LINE_WRITE += 1
 
         # check if we need a new logfile
-        if LOG_LINE_WRITE > 500:
+        if LOG_LINE_WRITE >= LOG_FILESIZE:
             reset_logfile()
 
         if show_raw and packet.haslayer(Raw) and method == "POST":
@@ -73,7 +84,26 @@ def process_packet(packet):
 
 # Create new log file and set all global values appropriately
 def reset_logfile():
-    print("not yet boyo")
+    global LOG_FILENUM_SWITCH_PAGE
+    global LOG_LINE_WRITE
+    # Change global values so process_packet will create and write to new logfile
+    # LOG_FILENUM_SWITCH_PAGE = LOG_FILENUM at this point
+        # change LOG_FILENUM_SWITCH_PAGE to be 1 greater than LOG_FILENUM. NOTE that when reading the logs to aggregate stats, when the last line of the old file is read, LOG_FILENUM will be incremented. When writing, if LOG_FILENUM_SWITCH_PAGE > LOG_FILENUM, write to LOG_FILENUM_SWITCH_PAGE
+    LOG_FILENUM_SWITCH_PAGE += 1
+
+    # reset LOG_LINE_WRITE
+    LOG_LINE_WRITE = 0
+
+# Read the next logfile
+def update_read_logfile():
+    global LOG_LINE_READ
+    global LOG_FILENUM
+    global LOG_FILENUM_SWITCH_PAGE
+
+    # Check if the log writer has switched to the next page, and if so, update read. 
+    if LOG_FILENUM_SWITCH_PAGE > LOG_FILENUM:
+        LOG_LINE_READ = 0
+        LOG_FILENUM += 1
 
 '''
 Open log file and process from line saved_line_num and filename, along with other stats collected in stats file. Update saved_line_num and if saved_line_num is too large, open new file and change file name. 
@@ -88,10 +118,15 @@ def aggregate_statistics():
     global INIT_STATS
     global INIT_SECTION_HITS
     global INIT_REVERSE_SECTION_HITS
+    global LOG_FILESIZE
     # open stats TODO: (come back to this later, as for now you can just store in mem)
     
     print("aggregating stats but not past the first return val")  
     
+    # check if we need to read next log file
+    if LOG_LINE_READ >= LOG_FILESIZE:
+        update_read_logfile()
+
     # open log
     log_filename = LOG_FILENAME + str(LOG_FILENUM) + ".txt"
     if not os.path.isfile(log_filename):
