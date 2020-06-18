@@ -24,8 +24,25 @@ INIT_STATS = {"most_hits_section" : "", "some_stat" : 5}
 INIT_SECTION_HITS = {}
 INIT_REVERSE_SECTION_HITS = {}
 
+# This keeps track of the number of logs seen by the averager every second
+LOG_COUNTER_UPDATE_PER_SECOND = 0
+
+# This keeps track of the number of logs seen, modified on the fly as logs pour in
+LOG_COUNTER = 0
+
+# List of max size 121 which has the number of logs seen in the last 120 seconds
+ROLLING_LOG_COUNT_LIST = []
+
+# The threshold of number of requests on avg in the last 2 min. This low value is for testing
+ROLLING_LOG_ALERT_THRESHOLD = .5
+
+# The rolling sum for current average
+ROLLING_SUM = 0
+
 # Changing this to 10 for testing. I think 500 is decent irl
 LOG_FILESIZE = 10
+
+LOG_COUNTER_MAX_SIZE = 5
 
 def sniff_packets(iface=None):
     """
@@ -49,6 +66,7 @@ def process_packet(packet):
     global LOG_FILENUM
     global LOG_FILENUM_SWITCH_PAGE
     global LOG_FILESIZE
+    global LOG_COUNTER
 
     # check if we need to open a new log file
     log_filename = LOG_FILENAME + str(LOG_FILENUM) + ".txt"
@@ -70,6 +88,9 @@ def process_packet(packet):
         logline = url + ":" + ip + "\n"
         logfile.write(logline)
         LOG_LINE_WRITE += 1
+
+        # add 1 to log counter
+        LOG_COUNTER += 1
 
         # check if we need a new logfile
         if LOG_LINE_WRITE >= LOG_FILESIZE:
@@ -119,6 +140,10 @@ def aggregate_statistics():
     global INIT_SECTION_HITS
     global INIT_REVERSE_SECTION_HITS
     global LOG_FILESIZE
+    global ROLLING_SUM
+    global ROLLING_LOG_COUNT_LIST
+    global ROLLING_LOG_ALERT_THRESHOLD
+
     # open stats TODO: (come back to this later, as for now you can just store in mem)
     
     print("aggregating stats but not past the first return val")  
@@ -169,7 +194,7 @@ def aggregate_statistics():
     # TODO: Displaying full url hits here -- need to display and return stats only for sections, not full urls
     print("most hits were for the following URL")
     print(INIT_STATS["most_hits_section"])
-    
+   
     # write to stats
     # TODO: We are saving the stats dicts, but not using the saved values anywhere. Tbd if we ever want to load the stats from memory in case the program crashes, or if we just want to begin again from scratch
     with open("./saved/stats.txt", "w") as stats_out:
@@ -190,6 +215,38 @@ def init_statistics():
         json.dump(stats_list, stats, indent=2)
     return
 
+def rolling_avg():
+    threading.Timer(1.0, rolling_avg).start()
+    global LOG_COUNTER_UPDATE_PER_SECOND
+    global LOG_COUNTER
+    global ROLLING_LOG_COUNT_LIST
+    global LOG_COUNTER_MAX_SIZE
+    global ROLLING_SUM
+    
+    print("log counter and per second counter are:" + str(LOG_COUNTER) + " " + str(LOG_COUNTER_UPDATE_PER_SECOND))
+
+    logs_in_last_second = LOG_COUNTER - LOG_COUNTER_UPDATE_PER_SECOND
+    LOG_COUNTER_UPDATE_PER_SECOND = LOG_COUNTER
+    
+    ROLLING_LOG_COUNT_LIST.append(logs_in_last_second)
+    ROLLING_SUM += logs_in_last_second
+
+    rolling_avg_val = ROLLING_SUM / (len(ROLLING_LOG_COUNT_LIST))
+    print("rolling average value is: " + str(rolling_avg_val))
+
+    if ROLLING_LOG_ALERT_THRESHOLD < rolling_avg_val:
+        print("OH NO!!! CROSSED THE LINE BUDDY BOI")
+
+
+    if len(ROLLING_LOG_COUNT_LIST) > 120:
+        ROLLING_LOG_COUNT_LIST = ROLLING_LOG_COUNT_LIST[-120:]
+
+    # If too many logs, reset LOG_COUNTER. This is atomic. 
+    if LOG_COUNTER > LOG_COUNTER_MAX_SIZE:
+        print("MAX SIZE HAS BEEN REACHED: RESETTING")
+        LOG_COUNTER = 0
+        LOG_COUNTER_UPDATE_PER_SECOND = 0 
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="HTTP Packet Sniffer, this is useful when you're a man in the middle." \
@@ -201,5 +258,6 @@ if __name__ == "__main__":
     iface = args.iface
     show_raw = args.show_raw
     init_statistics()
+    rolling_avg()
     aggregate_statistics()
     sniff_packets(iface)
