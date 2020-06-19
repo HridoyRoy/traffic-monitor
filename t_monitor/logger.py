@@ -1,6 +1,12 @@
 from scapy.all import *
 from scapy.layers.http import HTTPRequest # import HTTP packet
 from .globals import LOG_COUNTER
+from .globals import LOG_FILENUM
+from .globals import LOG_FILENAME
+from .globals import LOG_FILENUM_SWITCH_PAGE
+from .globals import LOG_LINE_WRITE
+from .globals import SHOW_RAW
+from .globals import LOG_FILESIZE
 # from scapy import *
 from colorama import init, Fore
 
@@ -13,14 +19,6 @@ RESET = Fore.RESET
 
 # NOTE: MAKING THE SAVED DIR MANUALLY FOR NOW. Writing to files with append (a+) creates a file if none exists, but the dir needs to be made manually. Else python throws an error.
 # NOTE: TODO: Log file being reset makes it difficult to read old log file. We need to fix this.
-LOG_FILENUM = 0
-LOG_FILENAME = "./saved/log"
-LOG_FILENUM_SWITCH_PAGE = 0
-LOG_LINE_WRITE = 0
-# Changing this to 10 for testing. I think 500 is decent irl
-LOG_FILESIZE = 10
-
-SHOW_RAW = False
 
 def process_packet(packet):
     """

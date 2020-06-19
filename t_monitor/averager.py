@@ -1,11 +1,11 @@
 from .globals import LOG_COUNTER
+from .globals import ROLLING_LOG_ALERT_THRESHOLD
+from .globals import LOG_COUNTER_MAX_SIZE
 import threading
 
 # List of max size 121 which has the number of logs seen in the last 120 seconds
 ROLLING_LOG_COUNT_LIST = []
 
-# The threshold of number of requests on avg in the last 2 min. This low value is for testing
-ROLLING_LOG_ALERT_THRESHOLD = .5
 
 # The rolling sum for current average
 ROLLING_SUM = 0
@@ -13,7 +13,6 @@ ROLLING_SUM = 0
 # This keeps track of the number of logs seen by the averager every second
 LOG_COUNTER_UPDATE_PER_SECOND = 0
 
-LOG_COUNTER_MAX_SIZE = 5
 
 def rolling_avg():
     threading.Timer(1.0, rolling_avg).start()

@@ -1,13 +1,13 @@
 import json
 import threading
 import os
-from .logger import LOG_FILENUM
-from .logger import LOG_FILENAME
-from .logger import LOG_FILESIZE
-from .logger import LOG_FILENUM_SWITCH_PAGE
+from .globals import LOG_FILENUM
+from .globals import LOG_FILENAME
+from .globals import LOG_FILESIZE
+from .globals import LOG_FILENUM_SWITCH_PAGE
+from .globals import LOG_LINE_READ
+from .globals import STATS_FILE
 
-LOG_LINE_READ = 0
-STATS_FILE = "./saved/stats.txt"
 INIT_STATS = {"most_hits_section" : "", "some_stat" : 5}
 INIT_SECTION_HITS = {}
 INIT_REVERSE_SECTION_HITS = {}
