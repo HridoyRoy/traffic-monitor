@@ -8,7 +8,6 @@ LOG_FILESIZE = 10
 
 SHOW_RAW = False
 
-LOG_LINE_READ = 0
 STATS_FILE = "./saved/stats.txt"
 
 # The threshold of number of requests on avg in the last 2 min. This low value is for testing

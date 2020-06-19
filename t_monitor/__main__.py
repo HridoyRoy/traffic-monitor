@@ -1,7 +1,6 @@
-from .statistician import init_statistics
-from .statistician import aggregate_statistics
-from .logger import sniff_packets
-from .averager import rolling_avg
+from .statistician import Statistician
+from .logger import Logger
+from .averager import Averager
 import argparse
 
 parser = argparse.ArgumentParser(description="HTTP Packet Sniffer, this is useful when you're a man in the middle." \
@@ -13,7 +12,11 @@ args = parser.parse_args()
 iface = args.iface
 show_raw = args.show_raw
 
-init_statistics()
-rolling_avg()
-aggregate_statistics()
-sniff_packets(iface, show_raw)
+statistician = Statistician()
+logger = Logger()
+averager = Averager()
+
+statistician.init_statistics()
+averager.rolling_avg()
+statistician.aggregate_statistics()
+logger.sniff_packets(iface, show_raw)
