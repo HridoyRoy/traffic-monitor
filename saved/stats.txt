@@ -1,8 +1,1 @@
-[
-  {
-    "most_hits_section": "",
-    "some_stat": 5
-  },
-  {},
-  {}
-]
+[{"most_hits_section": "facebook.com/", "some_stat": 5}, {"google.com/": 4, "facebook.com/": 6}, {"1": [], "2": [], "3": [], "4": ["google.com/"], "5": [], "6": ["facebook.com/"]}]

@@ -29,7 +29,7 @@ class Statistician:
 
         # check if we need to read next log file
         if Statistician.log_line_read >= LOG_FILESIZE:
-           this.update_read_logfile()
+           self.update_read_logfile()
 
         # open log
         log_filename = LOG_FILENAME + str(LOG_FILENUM) + ".txt"
@@ -65,7 +65,7 @@ class Statistician:
                     Statistician.log_line_read += 1
         # must use .get, not [] because don't want a keyError if this value doesn't exist. We want None.
         # TODO: All in 1 line. Break up for readability?
-        init_stats["most_hits_section"] = Statistician.init_reverse_section_hits.get(max(list(Statistician.init_reverse_section_hits)))[0]
+        Statistician.init_stats["most_hits_section"] = Statistician.init_reverse_section_hits.get(max(list(Statistician.init_reverse_section_hits)))[0]
 
         # display stats
 
