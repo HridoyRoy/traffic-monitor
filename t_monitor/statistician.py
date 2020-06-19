@@ -12,6 +12,11 @@ class Statistician:
     init_section_hits = {}
     init_reverse_section_hits = {}
     log_line_read = 0
+
+
+    def __init__(self, logIndexer):
+        self.logIndexer = logIndexer
+
     '''
     Open log file and process from line saved_line_num and filename, along with other stats collected in stats file. Update saved_line_num and if saved_line_num is too large, open new file and change file name.
 
@@ -32,7 +37,7 @@ class Statistician:
            self.update_read_logfile()
 
         # open log
-        log_filename = LOG_FILENAME + str(LOG_FILENUM) + ".txt"
+        log_filename = LOG_FILENAME + str(self.logIndexer.log_filenum) + ".txt"
         if not os.path.isfile(log_filename):
             # just wait
             return
@@ -93,7 +98,10 @@ class Statistician:
         global LOG_FILENUM
         global LOG_FILENUM_SWITCH_PAGE
 
+        print("log filenum in statistician is: " + str(self.logIndexer.log_filenum))
+        print("log filenum switch page in statistician is: " + str(self.logIndexer.log_filenum_switch_page))
+
         # Check if the log writer has switched to the next page, and if so, update read.
-        if LOG_FILENUM_SWITCH_PAGE > LOG_FILENUM:
+        if self.logIndexer.log_filenum_switch_page > self.logIndexer.log_filenum:
             Statistician.log_line_read = 0
-            LOG_FILENUM += 1
+            self.logIndexer.log_filenum += 1

@@ -2,6 +2,7 @@ from .statistician import Statistician
 from .logger import Logger
 from .averager import Averager
 import argparse
+from .globals import LogIndexer
 
 parser = argparse.ArgumentParser(description="HTTP Packet Sniffer, this is useful when you're a man in the middle." \
                                                  + "It is suggested that you run arp spoof before you use this script, otherwise it'll sniff your personal packets")
@@ -12,9 +13,11 @@ args = parser.parse_args()
 iface = args.iface
 show_raw = args.show_raw
 
-statistician = Statistician()
-logger = Logger()
-averager = Averager()
+logIndexer = LogIndexer()
+
+statistician = Statistician(logIndexer)
+logger = Logger(logIndexer)
+averager = Averager(logIndexer)
 
 statistician.init_statistics()
 averager.rolling_avg()

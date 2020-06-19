@@ -16,16 +16,19 @@ class Averager:
     log_counter_update_per_second = 0
 
 
+    def __init__(self, logIndexer):
+        self.logIndexer = logIndexer
+        
     def rolling_avg(self):
         threading.Timer(1.0, self.rolling_avg).start()
         global LOG_COUNTER
         global LOG_COUNTER_MAX_SIZE
         global ROLLING_LOG_ALERT_THRESHOLD
 
-        print("log counter and per second counter are:" + str(LOG_COUNTER) + " " + str(Averager.log_counter_update_per_second))
+        print("log counter and per second counter are:" + str(self.logIndexer.log_counter) + " " + str(Averager.log_counter_update_per_second))
 
-        Averager.logs_in_last_second = LOG_COUNTER - Averager.log_counter_update_per_second
-        Averager.log_counter_update_per_second = LOG_COUNTER
+        Averager.logs_in_last_second = self.logIndexer.log_counter - Averager.log_counter_update_per_second
+        Averager.log_counter_update_per_second = self.logIndexer.log_counter
 
         Averager.rolling_log_count_list.append(Averager.logs_in_last_second)
         Averager.rolling_sum += Averager.logs_in_last_second
@@ -40,7 +43,7 @@ class Averager:
             Averager.rolling_log_count_list = Averager.rolling_log_count_list[-120:]
 
         # If too many logs, reset LOG_COUNTER. This is atomic.
-        if LOG_COUNTER > LOG_COUNTER_MAX_SIZE:
+        if self.logIndexer.log_counter > LOG_COUNTER_MAX_SIZE:
             print("MAX SIZE HAS BEEN REACHED: RESETTING")
-            LOG_COUNTER = 0
+            self.logIndexer.log_counter = 0
             Averager.log_counter_update_per_second = 0
