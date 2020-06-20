@@ -16,3 +16,7 @@ class LogIndexer:
     log_filenum = 0
     log_filenum_switch_page = 0
 
+    def reset(self):
+        self.log_counter = 0
+        self.log_filenum = 0
+        self.log_filenum_switch_page = 0

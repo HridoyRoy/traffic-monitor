@@ -12,6 +12,11 @@ class TestStatistician(unittest.TestCase):
     def setUp(self):
         self.log_indexer = globals.LogIndexer()
         self.stat_master = statistician.Statistician(self.log_indexer)
+        self.log_indexer.reset()
+        self.stat_master.reset()
+
+        if os.path.exists("./saved"):
+            shutil.rmtree("./saved")
 
     def test_update_read_logfile(self):
         self.assertEqual(self.log_indexer.log_filenum, 0)
@@ -37,6 +42,18 @@ class TestStatistician(unittest.TestCase):
         # clean up
         shutil.rmtree("./saved")
 
+    def test_create_logfile_name(self):
+        self.log_indexer.log_filenum = 11
+        logfile_name = self.stat_master.create_logfile_name()
+        self.assertEqual(logfile_name, "./saved/log11.txt")
+
+    def test_update_most_hits_section(self):
+        self.stat_master.init_reverse_section_hits[1] = ["hi", "bye"]
+        self.stat_master.init_reverse_section_hits[2] = ["google"]
+        self.stat_master.init_section_hits = {"hi":1, "bye":1, "google":2}
+        print("hi" + str(self.stat_master.init_reverse_section_hits))
+        self.stat_master.update_most_hits_section()
+        self.assertEqual(self.stat_master.init_stats["most_hits_section"], "google")
 
     if __name__ == '__main__':
         unittest.main()                    
