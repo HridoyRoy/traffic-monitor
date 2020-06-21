@@ -10,12 +10,10 @@ from colorama import init, Fore
 
 class Logger:
 
-    log_line_write = 0
-    show_raw = False
-
     def __init__(self, logIndexer):
         self.logIndexer = logIndexer
-
+        self.log_line_write = 0
+        self.show_raw = False
 
     # NOTE: MAKING THE SAVED DIR MANUALLY FOR NOW. Writing to files with append (a+) creates a file if none exists, but the dir needs to be made manually. Else python throws an error.
     # NOTE: TODO: Log file being reset makes it difficult to read old log file. We need to fix this.
@@ -25,10 +23,7 @@ class Logger:
         This function is executed whenever a packet is sniffed
         """
         global LOG_FILENAME
-        global LOG_FILENUM
-        global LOG_FILENUM_SWITCH_PAGE
         global LOG_FILESIZE
-        global LOG_COUNTER
 
         # check if we need to open a new log file
         log_filename = LOG_FILENAME + str(self.logIndexer.log_filenum) + ".txt"
@@ -49,16 +44,16 @@ class Logger:
             # write logs to logfile
             logline = url + ":" + ip + "\n"
             logfile.write(logline)
-            Logger.log_line_write += 1
+            self.log_line_write += 1
 
             # add 1 to log counter
             self.logIndexer.log_counter += 1
 
             # check if we need a new logfile
-            if Logger.log_line_write >= LOG_FILESIZE:
+            if self.log_line_write >= LOG_FILESIZE:
                 self.reset_logfile()
 
-            if Logger.show_raw and packet.haslayer(Raw) and method == "POST":
+            if self.show_raw and packet.haslayer(Raw) and method == "POST":
                 # if show_raw flag is enabled, has raw data, and the requested method is "POST"
                 # then show raw
                 print("Some useful Raw data: " + str(packet[Raw].load))
@@ -72,7 +67,7 @@ class Logger:
         Scapy's default interface is used
     """
         if show_raw_var:
-            Logger.show_raw = True
+            self.show_raw = True
         if iface:
             # port 80 for http (generally)
             # `process_packet` is the callback
@@ -90,4 +85,4 @@ class Logger:
         self.logIndexer.log_filenum_switch_page += 1
         print("log_filenum_switch_page is: " + str(self.logIndexer.log_filenum_switch_page))
         # reset LOG_LINE_WRITE
-        Logger.log_line_write = 0
+        self.log_line_write = 0
