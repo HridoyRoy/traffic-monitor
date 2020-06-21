@@ -49,18 +49,24 @@ class Averager:
 
     def check_alert_threshold(self):
         global ROLLING_LOG_ALERT_THRESHOLD
+        # print("average rn is: " + str(self.rolling_avg_val))
         if ROLLING_LOG_ALERT_THRESHOLD < self.rolling_avg_val and self.alert_flag == 0:
             log_ln = "High traffic generated an alert - hits=" + str(self.rolling_sum) + ",triggered at " + str(datetime.datetime.now()) + "\n"
+            print(" ------- NEW ALERT ------- ")
             print(log_ln)
+            print(" ------------------------ ")
             self.write_averager_out(log_ln)
             self.alert_flag = 1
         if ROLLING_LOG_ALERT_THRESHOLD > self.rolling_avg_val and self.alert_flag == 1:
             log_ln = "Recovered: high traffic alert has recovered - hits=" + str(self.rolling_sum) + ",recovered at " + str(datetime.datetime.now()) + "\n"
+            print(" ------- NEW RECOVERY ALERT ------- ")
             print(log_ln)
+            print(" ---------------------------------- ")
             self.write_averager_out(log_ln)
             self.alert_flag = 0
 
     def update_rolling_counts(self):
+        # print(self.rolling_log_count_list)
         if len(self.rolling_log_count_list) > 120:
             self.rolling_log_count_list = self.rolling_log_count_list[-120:]
 

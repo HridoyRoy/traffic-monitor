@@ -56,14 +56,15 @@ class Statistician:
         self.update_most_hits_section()
 
         # redisplay alert threshold crossing history
-        print("Past Alert Log List: \n")
+        print("----- PAST LOG ALERT LIST ----- ")
         self.print_alert_history()
 
-        print("--------------------------------\n\n")
+        print("--------------------------------")
 
         # TODO: Displaying full url hits here -- need to display and return stats only for sections, not full urls
+        print(" ------ STATISTICS GENERATED ------ ")
         print("website section with most hits: " + str(self.init_stats["most_hits_section"]))
-        print("--------------------------------\n\n")
+        print("------------------------------------")
 
         # write to stats
         # TODO: We are saving the stats dicts, but not using the saved values anywhere. Tbd if we ever want to load the stats from memory in case the program crashes, or if we just want to begin again from scratch
@@ -77,8 +78,8 @@ class Statistician:
         with open("./saved/alerts.txt", "r") as alerts:
             for last_line in alerts:
                 print(last_line)
-            print("------------------")
             if not last_line.startswith("Recovered"):
+                print("--------------------------------")
                 print("Last alert currently unrecovered. See alert history above for more details.")
             
     def create_logfile_name(self):
