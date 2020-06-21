@@ -1,0 +1,77 @@
+Overview of Application Design:
+The project structure is as follows:
+
+traffic-monitor
+	-__init__.py --> To make this a module for relative imports
+	-requirements.txt --> guidelines for what packages needs to be installed. Not for use, as has not been tested. 
+	-README.md   --> just contains the prompt
+	- tests --> contains unit tests and an end-to-end test. Unit tests for class named x are in the file called test_x.py. The end to end test is called full_test.py. 
+	- t_monitor --> contains the actual code
+		- __main__.py --> Entrypoint.
+		- globals.py --> contains global final variables (such as log filesize, and so on), and the LogIndexer, which is a shared global class with static, shared variables to keep track of log reads and writes across classes. 
+		- statistician.py --> contains the Statistician class, which aggregates logfiles every 10 seconds on a threaded timer, and prints them out. 
+		- averager.py --> contains the Averager class, 
+		- logger.py --> contains the Logger class, which uses scapy to intercept packets, gets basic http information from these packets, and writes the packets to logs. 
+	- saved --> contains saved logfiles, statfiles, and threshold history logs that are generated.
+		- stats.txt --> some saved data structures to help aggregate stats
+		- logn.txt --> the nth log file generated. 
+		- alerts.txt --> is created if there are any alerts that fire, and contains alert history.  
+
+Installation Instructions:
+
+	The following are instructions for a linux env.
+	
+	1. Install python3: sudo apt-get install python3.6
+	2. Install pip3: sudo apt-get install python3-pip
+	3. Install tcpdump (this is necessary to run scapy): sudo apt-get install tcpdump 
+
+	4. Install scapy: sudo pip3 install scapy
+
+Instructions to Run Application:
+
+        1. scapy requires root access: sudo su
+	2. cd traffic-monitor
+	3. python3 -m t_monitor -i wlan0 --show-raw
+
+	Troubleshooting:
+
+        If you are getting the error: ImportError: No module named scapy.all, you may need to do the following: Add scapy to path. Add the following line to ~/.bashrc: export PATH=/home/<username>/.local/lib/python3.7/site-packages:$PATH, and run source ~/.bashrc
+
+Instructions to Test Manually:
+	After running the application, you can open a new window and curl websites -- for example, `curl www.google.com`. You will be able to see statistics appear in the application window every 10 seconds. 
+
+	You can run curls multiple times in succession. The current alert threshold is set to .5 (see traffic-monitor/t_monitor/globals.py), so you do not need to curl too many times before an alert shows up.
+
+	You will be able to cat files in .saved to see what the application saves. 
+
+Instructions to Run E-E Test:
+
+Instructions to Run Unit Tests:
+	1. cd traffic-monitor
+	2. python3 -m unittest	
+
+
+
+How Would I Improve The Application Design:
+
+I have commented the code with TODOs and NOTEs where applicable, to explain areas for improvement within the code itself. I will summarize some of these notes here, along with the reason why I did not implement these features.
+
+1. Keep time-series logs instead of just ip and dest url logs. In general, having a more descriptive and formal log structure would be extremely valuable in a production setting. However, for simplicity I decided to keep the logs basic and relatively unstructured. 
+
+2. Use numpy and cumsum to calculate rolling averages. For the purposes of the project, I stuck to a from-scratch implementation to limit number of dependencies, keep the design simple, not overengineer the code, and to make installation easier (also numpy/scipi are large and I didn't want to kill my vm or use cloud9).
+
+3. When calculating rolling averages, resetting the cumulative sum may be off by a couple seconds due to no explicit locking. However, http://effbot.org/zone/thread-synchronization.htm and https://stackoverflow.com/questions/2291069/is-python-variable-assignment-atomic show that explicit locking wouldn't make too much of a different, as variable resetting is atomic. To prevent overengineering, I did not implement locking. 
+
+4. There is a 10 second delay to aggregate statistics every time the Logger class starts writing to a new logfile. The Statistician class uses only the logfile it is currently in the middle of reading to aggregate the current statistics, and reads until the end of the current file. If the Logger class has moved onto writing to a new logfile in the meantime, the Statistician has to wait until the next 10 second interval to read the newest file.
+
+5. The Statistician class does not prune the data structures it uses to keep track of counts for urls. It does save the data structures into a file (.saved/stats.txt), but it does not actually pull the data structures from those files. I did not implement this simply because I ran out of time, and decided it would be best to document this issue and focus on testing, cleanliness, and so on.
+
+6. There are some issues with consistency in naming variables and functions. I wanted to keep to PEP8 standards as much as I could, but I did not have the time to focus on nomenclature and decided to leave it as is. 
+
+7. The LogIndexer class in globals.py uses static variables, and the global LogIndexer is created in __main__.py as opposed to globals.py. This is bad practice, but I decided that even though this was not pythonic, I would keep the design as log_counter within LogIndexer was meant to be globally shared and updated by different threads and files asynchronously.
+
+8. The console logs can probably be prettified a little more. I am just doing some prints here and there to convey the main idea. 
+
+9. The Logger class is using scapy.sniff to MITM packets. This function reads both inbound and outbound packets without distinguishing. Ideally we would distinguish between these two types of packets, but I did not have the time to implement this.
+
+10. There is no cleanup for the .saved files that are generated. One has to run `rm -r .saved` manually after killing the traffic monitor. However, one does not need to clean up the saved files before a second run of the traffic monitor, as the Statistician will delete the .saved directory before reinitialization. 

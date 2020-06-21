@@ -46,7 +46,12 @@ class Statistician:
         log_filename = self.create_logfile_name()
         
         if not os.path.isfile(log_filename):
-            # just wait
+            # return early
+            print(" ------ STATISTICS GENERATED ------ ")
+            print("website section with most hits: NONE")
+            print("number of different pages hit: 0")
+            print("total number of requests seen: 0")
+            print("------------------------------------")
             return
         
         # print("aggregating stats")
@@ -64,6 +69,8 @@ class Statistician:
         # TODO: Displaying full url hits here -- need to display and return stats only for sections, not full urls
         print(" ------ STATISTICS GENERATED ------ ")
         print("website section with most hits: " + str(self.init_stats["most_hits_section"]))
+        print("number of different pages hit: " + str(len(self.init_section_hits)))
+        print("total number of requests seen: " + str(sum(self.init_section_hits.values())))
         print("------------------------------------")
 
         # write to stats

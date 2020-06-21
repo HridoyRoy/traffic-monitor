@@ -1,2 +1,0 @@
-High traffic generated an alert - hits=2,triggered at 2020-06-21 09:44:46.699487
-Recovered: high traffic alert has recovered - hits=32,recovered at 2020-06-21 09:45:48.756763
