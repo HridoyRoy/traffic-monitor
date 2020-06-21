@@ -77,6 +77,7 @@ class Statistician:
         self.init_stats["most_hits_section"] = self.init_reverse_section_hits.get(max(list(self.init_reverse_section_hits)))[0]
 
     def assimilate_logs_into_stats(self, log_filename):
+        print("hiii")
         with open(log_filename) as log_file:
             for i, line in enumerate(log_file):
                 print("values are:" )

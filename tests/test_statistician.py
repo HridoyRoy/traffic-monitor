@@ -55,5 +55,28 @@ class TestStatistician(unittest.TestCase):
         self.stat_master.update_most_hits_section()
         self.assertEqual(self.stat_master.init_stats["most_hits_section"], "google")
 
+    def test_assimilate_logs_into_stats(self):
+        os.makedirs("./saved")
+        count = 0
+        with open("./saved/log0.txt", "w+") as log_zero:
+            while count < globals.LOG_FILESIZE:
+                url_id = count
+                if count > globals.LOG_FILESIZE / 2:
+                    # int rounds up
+                    url_id = int(count / 2)
+                log_zero.write("url" + str(url_id) + ":ip\n")
+                count += 1
+        self.stat_master.assimilate_logs_into_stats("./saved/log0.txt")
+        print("logs have been assimilated")
+        print(self.stat_master.init_section_hits)
+        print(self.stat_master.init_reverse_section_hits)
+       
+        self.assertEqual(self.stat_master.init_section_hits["url0"], 1)
+        self.assertEqual(self.stat_master.init_section_hits["url1"], 1)
+        self.assertEqual(self.stat_master.init_section_hits["url2"], 1)
+        self.assertEqual(self.stat_master.init_section_hits["url3"], 3)
+        self.assertEqual(self.stat_master.init_section_hits["url4"], 3)
+        self.assertEqual(self.stat_master.init_section_hits["url5"], 1)
+
     if __name__ == '__main__':
         unittest.main()                    
