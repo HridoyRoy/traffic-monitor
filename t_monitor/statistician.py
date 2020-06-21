@@ -35,7 +35,7 @@ class Statistician:
 
         # should we use stats file that we sdaved? NOTE: TODO:
 
-        print("aggregating stats but not past the first return val")
+        # print("aggregating stats but not past the first return val")
 
         # check if we need to read next log file
         if self.log_line_read >= LOG_FILESIZE:
@@ -49,7 +49,7 @@ class Statistician:
             # just wait
             return
         
-        print("aggregating stats")
+        # print("aggregating stats")
         self.assimilate_logs_into_stats(log_filename)
 
         # update most_hits
@@ -57,6 +57,7 @@ class Statistician:
 
         # redisplay alert threshold crossing history
         print("Past Alert Log List: \n")
+        self.print_alert_history()
 
         print("--------------------------------\n\n")
 
@@ -69,25 +70,36 @@ class Statistician:
         with open("./saved/stats.txt", "w") as stats_out:
             json.dump([self.init_stats, self.init_section_hits, self.init_reverse_section_hits], stats_out)
 
+    def print_alert_history(self):
+        last_line = None
+        if not os.path.isfile("./saved/alerts.txt"):
+            return
+        with open("./saved/alerts.txt", "r") as alerts:
+            for last_line in alerts:
+                print(last_line)
+            print("------------------")
+            if not last_line.startswith("Recovered"):
+                print("Last alert currently unrecovered. See alert history above for more details.")
+            
     def create_logfile_name(self):
         global LOG_FILENAME
         return LOG_FILENAME + str(self.logIndexer.log_filenum) + ".txt"
 
     def update_most_hits_section(self):
-        print("hi")
+        # print("hi")
         # get because we cannot get None's as return values
-        print("init_reverse_section hits are: ", self.init_reverse_section_hits)
+        # print("init_reverse_section hits are: ", self.init_reverse_section_hits)
         self.init_stats["most_hits_section"] = self.init_reverse_section_hits.get(max(list(self.init_reverse_section_hits)))[0]
 
     def assimilate_logs_into_stats(self, log_filename):
-        print("hiii")
+        # print("hiii")
         with open(log_filename) as log_file:
             for i, line in enumerate(log_file):
-                print("values are:" )
-                print(self.init_section_hits)
-                print(self.init_reverse_section_hits)
+                # print("values are:" )
+                # print(self.init_section_hits)
+                # print(self.init_reverse_section_hits)
                 if i == self.log_line_read:
-                    print("i is to be read: " + str(i))
+                    # print("i is to be read: " + str(i))
                     # read and update read counter, and add to appropriate log locations
                     log_vals = line.split(":")
                     url = log_vals[0]
@@ -120,8 +132,8 @@ class Statistician:
 
     # Read the next logfile
     def update_read_logfile(self):
-        print("log filenum in statistician is: " + str(self.logIndexer.log_filenum))
-        print("log filenum switch page in statistician is: " + str(self.logIndexer.log_filenum_switch_page))
+        # print("log filenum in statistician is: " + str(self.logIndexer.log_filenum))
+        # print("log filenum switch page in statistician is: " + str(self.logIndexer.log_filenum_switch_page))
 
         # Check if the log writer has switched to the next page, and if so, update read.
         if self.logIndexer.log_filenum_switch_page > self.logIndexer.log_filenum:

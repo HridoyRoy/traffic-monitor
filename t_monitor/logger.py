@@ -40,7 +40,7 @@ class Logger:
             ip = packet[IP].src
             # get the request method
             method = packet[HTTPRequest].Method.decode()
-            print(str(ip) + " requested " + str(url_section))
+            # print(str(ip) + " requested " + str(url_section))
 
             # write logs to logfile
             logline = url_section + ":" + ip + "\n"
@@ -54,13 +54,12 @@ class Logger:
             if self.log_line_write >= LOG_FILESIZE:
                 self.reset_logfile()
 
-            if self.show_raw and packet.haslayer(Raw) and method == "POST":
+            # if self.show_raw and packet.haslayer(Raw) and method == "POST":
                 # if show_raw flag is enabled, has raw data, and the requested method is "POST"
                 # then show raw
-                print("Some useful Raw data: " + str(packet[Raw].load))
+                # print("Some useful Raw data: " + str(packet[Raw].load))
         if not logfile.closed:
             logfile.close()
-        print("log counter is: " + str(self.logIndexer.log_counter))
 
     def sniff_packets(self, iface=None, show_raw_var=False):
         """
@@ -81,7 +80,6 @@ class Logger:
         url_parts = url.split("/")
         section = None
         url_parts_len = len(url_parts)
-        print("url parts are:" + str(url_parts))
         if (url_parts_len > 2) and (url_parts[0] == "http:" or url_parts[0] == "https:") and (url_parts[1] == ""):
             if url_parts_len >= 4:
                 section = "/".join(url_parts[:4])
@@ -100,6 +98,5 @@ class Logger:
         # LOG_FILENUM_SWITCH_PAGE = LOG_FILENUM at this point
             # change LOG_FILENUM_SWITCH_PAGE to be 1 greater than LOG_FILENUM. NOTE that when reading the logs to aggregate stats, when the last line of the old file is read, LOG_FILENUM will be incremented. When writing, if LOG_FILENUM_SWITCH_PAGE > LOG_FILENUM, write to LOG_FILENUM_SWITCH_PAGE
         self.logIndexer.log_filenum_switch_page += 1
-        print("log_filenum_switch_page is: " + str(self.logIndexer.log_filenum_switch_page))
         # reset LOG_LINE_WRITE
         self.log_line_write = 0

@@ -25,15 +25,17 @@ class Averager:
         global LOG_COUNTER_MAX_SIZE
         global ROLLING_LOG_ALERT_THRESHOLD
 
-        print("log counter and per second counter are:" + str(self.logIndexer.log_counter) + " " + str(self.log_counter_update_per_second))
-
         self.calc_rolling_average()
 
         self.check_alert_threshold()
         
         self.update_rolling_counts()
-
+        
         self.reset_log_counters()
+
+    def write_averager_out(self, line):
+        with open("./saved/alerts.txt", "a+") as averager_file:
+            averager_file.write(line)
 
     def calc_rolling_average(self):
         self.logs_in_last_second = self.logIndexer.log_counter - self.log_counter_update_per_second
@@ -48,10 +50,14 @@ class Averager:
     def check_alert_threshold(self):
         global ROLLING_LOG_ALERT_THRESHOLD
         if ROLLING_LOG_ALERT_THRESHOLD < self.rolling_avg_val and self.alert_flag == 0:
-            print("High traffic generated an alert - hits=" + str(self.rolling_sum) + ",triggered at " + str(datetime.datetime.now()))
+            log_ln = "High traffic generated an alert - hits=" + str(self.rolling_sum) + ",triggered at " + str(datetime.datetime.now()) + "\n"
+            print(log_ln)
+            self.write_averager_out(log_ln)
             self.alert_flag = 1
         if ROLLING_LOG_ALERT_THRESHOLD > self.rolling_avg_val and self.alert_flag == 1:
-            print("High traffic alert has recovered - hits=" + str(self.rolling_sum) + ",recovered at " + str(datetime.datetime.now()))
+            log_ln = "Recovered: high traffic alert has recovered - hits=" + str(self.rolling_sum) + ",recovered at " + str(datetime.datetime.now()) + "\n"
+            print(log_ln)
+            self.write_averager_out(log_ln)
             self.alert_flag = 0
 
     def update_rolling_counts(self):
@@ -62,6 +68,6 @@ class Averager:
         global LOG_COUNTER_MAX_SIZE
         # If too many logs, reset LOG_COUNTER. This is atomic.
         if self.logIndexer.log_counter > LOG_COUNTER_MAX_SIZE:
-            print("MAX SIZE HAS BEEN REACHED: RESETTING")
+            # print("MAX SIZE HAS BEEN REACHED: RESETTING")
             self.logIndexer.log_counter = 0
             self.log_counter_update_per_second = 0
