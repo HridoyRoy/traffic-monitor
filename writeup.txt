@@ -1,4 +1,5 @@
-Overview of Application Design:
+OVERVIEW OF APPLICATION DESIGN:
+
 The project structure is as follows:
 
 traffic-monitor
@@ -17,7 +18,9 @@ traffic-monitor
 		- logn.txt --> the nth log file generated. 
 		- alerts.txt --> is created if there are any alerts that fire, and contains alert history.  
 
-Installation Instructions:
+
+
+INSTALLATION INSTRUCTIONS:
 
 	The following are instructions for a linux env.
 	
@@ -27,7 +30,9 @@ Installation Instructions:
 
 	4. Install scapy: sudo pip3 install scapy
 
-Instructions to Run Application:
+
+
+INSTRUCTIONS TO RUN APPLICATION:
 
         1. scapy requires root access: sudo su
 	2. cd traffic-monitor
@@ -37,22 +42,29 @@ Instructions to Run Application:
 
         If you are getting the error: ImportError: No module named scapy.all, you may need to do the following: Add scapy to path. Add the following line to ~/.bashrc: export PATH=/home/<username>/.local/lib/python3.7/site-packages:$PATH, and run source ~/.bashrc
 
-Instructions to Test Manually:
+
+
+
+INSTRUCTIONS TO TEST MANUALLY:
 	After running the application, you can open a new window and curl websites -- for example, `curl www.google.com`. You will be able to see statistics appear in the application window every 10 seconds. 
 
 	You can run curls multiple times in succession. The current alert threshold is set to .5 (see traffic-monitor/t_monitor/globals.py), so you do not need to curl too many times before an alert shows up.
 
 	You will be able to cat files in .saved to see what the application saves. 
 
-Instructions to Run E-E Test:
 
-Instructions to Run Unit Tests:
+
+INSTRUCTIONS TO RUN E-E TEST:
+
+
+
+INSTRUCTIONS TO RUN UNIT TESTS:
 	1. cd traffic-monitor
 	2. python3 -m unittest	
 
 
 
-How Would I Improve The Application Design:
+IMPROVEMENTS TO APPLICATION DESIGN:
 
 I have commented the code with TODOs and NOTEs where applicable, to explain areas for improvement within the code itself. I will summarize some of these notes here, along with the reason why I did not implement these features.
 
@@ -74,4 +86,6 @@ I have commented the code with TODOs and NOTEs where applicable, to explain area
 
 9. The Logger class is using scapy.sniff to MITM packets. This function reads both inbound and outbound packets without distinguishing. Ideally we would distinguish between these two types of packets, but I did not have the time to implement this.
 
-10. There is no cleanup for the .saved files that are generated. One has to run `rm -r .saved` manually after killing the traffic monitor. However, one does not need to clean up the saved files before a second run of the traffic monitor, as the Statistician will delete the .saved directory before reinitialization. 
+10. There is no cleanup for the .saved files that are generated. One has to run `rm -r .saved` manually after killing the traffic monitor. However, one does not need to clean up the saved files before a second run of the traffic monitor, as the Statistician will delete the .saved directory before reinitialization.
+
+11. More unit tests would be nice. I didn't have time to add more.  

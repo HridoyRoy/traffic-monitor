@@ -1,5 +1,7 @@
 # traffic-monitor
 
+NOTE: This README just shows the prompt. Please check out writeup.txt for installation instructions, the code layout, and how to improve the application. Thank you! 
+
 
 Prompt:
 

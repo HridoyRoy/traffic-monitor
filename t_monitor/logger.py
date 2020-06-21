@@ -1,19 +1,21 @@
 from scapy.all import *
 from scapy.layers.http import HTTPRequest # import HTTP packet
-from .globals import LOG_COUNTER
-from .globals import LOG_FILENUM
 from .globals import LOG_FILENAME
-from .globals import LOG_FILENUM_SWITCH_PAGE
 from .globals import LOG_FILESIZE
 # from scapy import *
 from colorama import init, Fore
 
+"""
+The Logger class uses scapy to MITM requests and log them to log files. 
+"""
 class Logger:
 
     def __init__(self, logIndexer):
+        # log indexer to keep track of logging info and share between threads and classes. 
         self.logIndexer = logIndexer
+
+        # a count for the line number of the currently written log. 
         self.log_line_write = 0
-        self.show_raw = False
 
     # NOTE: MAKING THE SAVED DIR MANUALLY FOR NOW. Writing to files with append (a+) creates a file if none exists, but the dir needs to be made manually. Else python throws an error.
     # NOTE: TODO: Log file being reset makes it difficult to read old log file. We need to fix this.
@@ -25,22 +27,23 @@ class Logger:
         global LOG_FILENAME
         global LOG_FILESIZE
 
-        # check if we need to open a new log file
+        # Check if we are writing to a different log file than the one statistician is reading.
         log_filename = LOG_FILENAME + str(self.logIndexer.log_filenum) + ".txt"
         if self.logIndexer.log_filenum < self.logIndexer.log_filenum_switch_page:
             log_filename = LOG_FILENAME + str(self.logIndexer.log_filenum_switch_page) + ".txt"
 
+        # Open the logfile and write relevant info from packet to log. 
         logfile = open(log_filename, 'a+')
+        # Make sure the packet is an HTTP request. 
         if packet.haslayer(HTTPRequest):
-            # if this packet is an HTTP Request
-            # get the requested URL
+            # Get URL from the packet
             url = packet[HTTPRequest].Host.decode() + packet[HTTPRequest].Path.decode()
+            # Get the url section to write to log
             url_section = self.get_section_from_url(url)
-            # get the requester's IP Address
+            
+            # get source IP. 
+            # NOTE: I included this in the logs so we could distinguish between inbound and outbound logs by comparing this IP to our local IP, but did not get to implement that functionality. 
             ip = packet[IP].src
-            # get the request method
-            method = packet[HTTPRequest].Method.decode()
-            # print(str(ip) + " requested " + str(url_section))
 
             # write logs to logfile
             logline = url_section + ":" + ip + "\n"
@@ -54,40 +57,35 @@ class Logger:
             if self.log_line_write >= LOG_FILESIZE:
                 self.reset_logfile()
 
-            # if self.show_raw and packet.haslayer(Raw) and method == "POST":
-                # if show_raw flag is enabled, has raw data, and the requested method is "POST"
-                # then show raw
-                # print("Some useful Raw data: " + str(packet[Raw].load))
         if not logfile.closed:
             logfile.close()
 
-    def sniff_packets(self, iface=None, show_raw_var=False):
-        """
-        Sniff 80 port packets with `iface`, if None (default), then the
-        Scapy's default interface is used
     """
-        if show_raw_var:
-            self.show_raw = True
-        if iface:
-            # port 80 for http (generally)
-            # `process_packet` is the callback
-            sniff(filter="port 80", prn=self.process_packet, iface=conf.iface, store=False)
-        else:
-            # sniff with default interface
-            sniff(filter="port 80", prn=self.process_packet, store=False)
+    scapy handler for socket stuff that MITMs HTTP requests and forwards them for processing.
+    """
+    def sniff_reqs(self):
+        # sniff is the scapy function. Without an iface parameter, it will sniff on all interfaces, on port 80 (http port): https://scapy.readthedocs.io/en/latest/
+        sniff(filter="port 80", prn=self.process_packet, store=False)
 
+    """
+    Gets url section from a url. A url section is everything before the second slash of the url. For example, https://www.google.com/pages/hello corresponds to the section https://www.google.com/pages. 
+    """
     def get_section_from_url(self, url):
         url_parts = url.split("/")
         section = None
         url_parts_len = len(url_parts)
         if (url_parts_len > 2) and (url_parts[0] == "http:" or url_parts[0] == "https:") and (url_parts[1] == ""):
+            # http or https://blah splits to [http, '', other stuff]. In this case, we want to split up until the 4th slash.
             if url_parts_len >= 4:
                 section = "/".join(url_parts[:4])
             else:
+                # Just join everything, the entire url is just a section. 
                 section = "/".join(url_parts)
         elif url_parts_len > 2:
+            # No http:// in the url. In this case we just include everything before the 2nd slash. 
             section = "/".join(url_parts[:2])
         else:
+            # Less than 2 slashes in the entire url. We just join everything.
             section = "/".join(url_parts)
         return section
         
