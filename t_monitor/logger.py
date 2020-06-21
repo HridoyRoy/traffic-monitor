@@ -35,14 +35,15 @@ class Logger:
             # if this packet is an HTTP Request
             # get the requested URL
             url = packet[HTTPRequest].Host.decode() + packet[HTTPRequest].Path.decode()
+            url_section = self.get_section_from_url(url)
             # get the requester's IP Address
             ip = packet[IP].src
             # get the request method
             method = packet[HTTPRequest].Method.decode()
-            print(str(ip) + " requested " + str(url))
+            print(str(ip) + " requested " + str(url_section))
 
             # write logs to logfile
-            logline = url + ":" + ip + "\n"
+            logline = url_section + ":" + ip + "\n"
             logfile.write(logline)
             self.log_line_write += 1
 
@@ -76,6 +77,22 @@ class Logger:
             # sniff with default interface
             sniff(filter="port 80", prn=self.process_packet, store=False)
 
+    def get_section_from_url(self, url):
+        url_parts = url.split("/")
+        section = None
+        url_parts_len = len(url_parts)
+        print("url parts are:" + str(url_parts))
+        if (url_parts_len > 2) and (url_parts[0] == "http:" or url_parts[0] == "https:") and (url_parts[1] == ""):
+            if url_parts_len >= 4:
+                section = "/".join(url_parts[:4])
+            else:
+                section = "/".join(url_parts)
+        elif url_parts_len > 2:
+            section = "/".join(url_parts[:2])
+        else:
+            section = "/".join(url_parts)
+        return section
+        
     # Create new log file and set all global values appropriately
     def reset_logfile(self):
         global LOG_FILENUM_SWITCH_PAGE

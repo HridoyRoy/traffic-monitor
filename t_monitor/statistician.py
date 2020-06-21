@@ -55,11 +55,14 @@ class Statistician:
         # update most_hits
         self.update_most_hits_section()
 
-        # display stats
+        # redisplay alert threshold crossing history
+        print("Past Alert Log List: \n")
+
+        print("--------------------------------\n\n")
 
         # TODO: Displaying full url hits here -- need to display and return stats only for sections, not full urls
-        print("most hits were for the following URL")
-        print(self.init_stats["most_hits_section"])
+        print("website section with most hits: " + str(self.init_stats["most_hits_section"]))
+        print("--------------------------------\n\n")
 
         # write to stats
         # TODO: We are saving the stats dicts, but not using the saved values anywhere. Tbd if we ever want to load the stats from memory in case the program crashes, or if we just want to begin again from scratch

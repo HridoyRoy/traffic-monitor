@@ -2,6 +2,7 @@ from .globals import LOG_COUNTER
 from .globals import ROLLING_LOG_ALERT_THRESHOLD
 from .globals import LOG_COUNTER_MAX_SIZE
 import threading
+import datetime
 
 class Averager:
 
@@ -15,6 +16,9 @@ class Averager:
 
         # This keeps track of the number of logs seen by the averager every second
         self.log_counter_update_per_second = 0
+        
+        # Alert flag makes sure that an alert doesn't refire infinitely
+        self.alert_flag = 0
 
     def rolling_avg(self):
         threading.Timer(1.0, self.rolling_avg).start()
@@ -39,12 +43,16 @@ class Averager:
         self.rolling_sum += self.logs_in_last_second
 
         self.rolling_avg_val = self.rolling_sum / (len(self.rolling_log_count_list))
-        print("rolling average value is: " + str(self.rolling_avg_val))
+        # print("rolling average value is: " + str(self.rolling_avg_val))
 
     def check_alert_threshold(self):
         global ROLLING_LOG_ALERT_THRESHOLD
-        if ROLLING_LOG_ALERT_THRESHOLD < self.rolling_avg_val:
-            print("OH NO!!! CROSSED THE LINE BUDDY BOI")
+        if ROLLING_LOG_ALERT_THRESHOLD < self.rolling_avg_val and self.alert_flag == 0:
+            print("High traffic generated an alert - hits=" + str(self.rolling_sum) + ",triggered at " + str(datetime.datetime.now()))
+            self.alert_flag = 1
+        if ROLLING_LOG_ALERT_THRESHOLD > self.rolling_avg_val and self.alert_flag == 1:
+            print("High traffic alert has recovered - hits=" + str(self.rolling_sum) + ",recovered at " + str(datetime.datetime.now()))
+            self.alert_flag = 0
 
     def update_rolling_counts(self):
         if len(self.rolling_log_count_list) > 120:
