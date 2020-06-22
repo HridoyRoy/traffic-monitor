@@ -36,7 +36,7 @@ INSTRUCTIONS TO RUN APPLICATION:
 
         1. scapy requires root access: sudo su
 	2. cd traffic-monitor
-	3. python3 -m t_monitor -i wlan0 --show-raw
+	3. python3 -m t_monitor
 
 	Troubleshooting:
 
