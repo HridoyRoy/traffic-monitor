@@ -17,9 +17,6 @@ class Logger:
         # a count for the line number of the currently written log. 
         self.log_line_write = 0
 
-    # NOTE: MAKING THE SAVED DIR MANUALLY FOR NOW. Writing to files with append (a+) creates a file if none exists, but the dir needs to be made manually. Else python throws an error.
-    # NOTE: TODO: Log file being reset makes it difficult to read old log file. We need to fix this.
-
     def process_packet(self, packet):
         """
         This function is executed whenever a packet is sniffed
