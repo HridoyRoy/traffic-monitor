@@ -6,12 +6,13 @@ traffic-monitor
 	-__init__.py --> To make this a module for relative imports
 	-requirements.txt --> guidelines for what packages needs to be installed. Not for use, as has not been tested. 
 	-README.md   --> just contains the prompt
-	- tests --> contains unit tests and an end-to-end test. Unit tests for class named x are in the file called test_x.py. The end to end test is called full_test.py. 
+	-end_to_end.py --> this contains the end to end test for the application.
+	- tests --> contains unit tests. Unit tests for class named x are in the file called test_x.py. 
 	- t_monitor --> contains the actual code
 		- __main__.py --> Entrypoint.
 		- globals.py --> contains global final variables (such as log filesize, and so on), and the LogIndexer, which is a shared global class with static, shared variables to keep track of log reads and writes across classes. 
 		- statistician.py --> contains the Statistician class, which aggregates logfiles every 10 seconds on a threaded timer, and prints them out. 
-		- averager.py --> contains the Averager class, 
+		- averager.py --> contains the Averager class, which calculates rolling averages and alerts if the rolling average of seen requests in the last 2 minutes is too high. 
 		- logger.py --> contains the Logger class, which uses scapy to intercept packets, gets basic http information from these packets, and writes the packets to logs. 
 	- saved --> contains saved logfiles, statfiles, and threshold history logs that are generated.
 		- stats.txt --> some saved data structures to help aggregate stats
@@ -27,7 +28,6 @@ INSTALLATION INSTRUCTIONS:
 	1. Install python3: sudo apt-get install python3.6
 	2. Install pip3: sudo apt-get install python3-pip
 	3. Install tcpdump (this is necessary to run scapy): sudo apt-get install tcpdump 
-
 	4. Install scapy: sudo pip3 install scapy
 
 
@@ -46,16 +46,17 @@ INSTRUCTIONS TO RUN APPLICATION:
 
 
 INSTRUCTIONS TO TEST MANUALLY:
-	After running the application, you can open a new window and curl websites -- for example, `curl www.google.com`. You will be able to see statistics appear in the application window every 10 seconds. 
+	After running the application (see instructions above), you can open a new window and curl websites -- for example, `curl www.google.com`. You will be able to see statistics appear in the application window every 10 seconds. 
 
 	You can run curls multiple times in succession. The current alert threshold is set to .5 (see traffic-monitor/t_monitor/globals.py), so you do not need to curl too many times before an alert shows up.
 
 	You will be able to cat files in .saved to see what the application saves. 
 
 
-
 INSTRUCTIONS TO RUN E-E TEST:
-
+	1. Install the application (see instructions above).
+	2. cd traffic-monitor
+	3. python3 end_to_end.py
 
 
 INSTRUCTIONS TO RUN UNIT TESTS:
@@ -74,18 +75,19 @@ I have commented the code with TODOs and NOTEs where applicable, to explain area
 
 3. When calculating rolling averages, resetting the cumulative sum may be off by a couple seconds due to no explicit locking. However, http://effbot.org/zone/thread-synchronization.htm and https://stackoverflow.com/questions/2291069/is-python-variable-assignment-atomic show that explicit locking wouldn't make too much of a different, as variable resetting is atomic. To prevent overengineering, I did not implement locking. 
 
-4. There is a 10 second delay to aggregate statistics every time the Logger class starts writing to a new logfile. The Statistician class uses only the logfile it is currently in the middle of reading to aggregate the current statistics, and reads until the end of the current file. If the Logger class has moved onto writing to a new logfile in the meantime, the Statistician has to wait until the next 10 second interval to read the newest file.
 
-5. The Statistician class does not prune the data structures it uses to keep track of counts for urls. It does save the data structures into a file (.saved/stats.txt), but it does not actually pull the data structures from those files. I did not implement this simply because I ran out of time, and decided it would be best to document this issue and focus on testing, cleanliness, and so on.
+4. The Statistician class does not prune the data structures it uses to keep track of counts for urls. It does save the data structures into a file (.saved/stats.txt), but it does not actually pull the data structures from those files. I did not implement this simply because I ran out of time, and decided it would be best to document this issue and focus on testing, cleanliness, and so on.
 
-6. There are some issues with consistency in naming variables and functions. I wanted to keep to PEP8 standards as much as I could, but I did not have the time to focus on nomenclature and decided to leave it as is. 
+5. There are some issues with consistency in naming variables and functions. Even the main folder, named traffic-monitor, should be named traffic_monitor, or something to that affect. I wanted to keep to PEP8 standards as much as I could, but I did not have the time to focus on nomenclature and decided to leave it as is. 
 
-7. The LogIndexer class in globals.py uses static variables, and the global LogIndexer is created in __main__.py as opposed to globals.py. This is bad practice, but I decided that even though this was not pythonic, I would keep the design as log_counter within LogIndexer was meant to be globally shared and updated by different threads and files asynchronously.
+6. The LogIndexer class in globals.py uses static variables, and the global LogIndexer is created in __main__.py as opposed to globals.py. This is bad practice, but I decided that even though this was not pythonic, I would keep the design as log_counter within LogIndexer was meant to be globally shared and updated by different threads and files asynchronously.
 
-8. The console logs can probably be prettified a little more. I am just doing some prints here and there to convey the main idea. 
+7. The console logs can probably be prettified a little more. I am just doing some prints here and there to convey the main idea. 
 
-9. The Logger class is using scapy.sniff to MITM packets. This function reads both inbound and outbound packets without distinguishing. Ideally we would distinguish between these two types of packets, but I did not have the time to implement this.
+8. The Logger class is using scapy.sniff to MITM packets. This function reads both inbound and outbound packets without distinguishing. Ideally we would distinguish between these two types of packets, but I did not have the time to implement this.
 
 10. There is no cleanup for the .saved files that are generated. One has to run `rm -r .saved` manually after killing the traffic monitor. However, one does not need to clean up the saved files before a second run of the traffic monitor, as the Statistician will delete the .saved directory before reinitialization.
 
-11. More unit tests would be nice. I didn't have time to add more.  
+11. More unit tests. I didn't have time to add too many, but I included a few useful ones, that should suffice to give the general idea. Please note that the main test for this code is in end_to_end.py. 
+
+12. Installation instructions should be included in a Makefile.

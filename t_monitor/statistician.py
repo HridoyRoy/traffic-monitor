@@ -64,6 +64,9 @@ class Statistician:
         
         # Add logs to stats
         self.assimilate_logs_into_stats(log_filename)
+        
+        # Check if we need to update logfile and assimilate stats again
+        self.update_read_logfile()
 
         # update most_hits
         self.update_most_hits_section()
@@ -118,6 +121,10 @@ class Statistician:
     Assimilate logs into stats
     """
     def assimilate_logs_into_stats(self, log_filename):
+        # If we have finished reading logs, stop. 
+        if self.logIndexer.log_filenum > self.logIndexer.log_filenum_switch_page:
+            return
+
         with open(log_filename) as log_file:
             for i, line in enumerate(log_file):
                 # Only read lines starting at the last line read by the Statistician.
@@ -144,6 +151,7 @@ class Statistician:
                     #  update log read counter
                     self.log_line_read += 1
 
+
     """
     Initialize statistics file and saved folder. 
     """
@@ -162,6 +170,9 @@ class Statistician:
     """
     def update_read_logfile(self):
         # Check if the log writer has switched to the next page, and if so, update read.
-        if self.logIndexer.log_filenum_switch_page > self.logIndexer.log_filenum:
+        while self.logIndexer.log_filenum_switch_page > self.logIndexer.log_filenum:
             self.log_line_read = 0
             self.logIndexer.log_filenum += 1
+
+            # Restart assimilation with new logfile
+            self.assimilate_logs_into_stats(self.create_logfile_name())

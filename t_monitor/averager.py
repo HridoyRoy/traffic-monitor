@@ -34,9 +34,6 @@ class Averager:
         # check if the rolling average has crossed our alerting threshold
         self.check_alert_threshold()
         
-        # update counts
-        self.update_rolling_counts()
-        
         # reset the log counter if it has crossed the max allowed value -- this is to prevent buffer overflow. NOTE: the current max value is set very low for demonstration purposes. In production, it would be something like 2 ^ 20 or something closer to 2 ^ 32. 
         self.reset_log_counters()
 
@@ -62,7 +59,12 @@ class Averager:
 
         # Add the current number of logs seen this second to a rolling sum. 
         self.rolling_sum += self.logs_in_last_second
-        
+
+        # Prune rolling log counts if more than 2 minutes of logs remove the first value from the rolling sum.
+        while len(self.rolling_log_count_list) > 120:
+            self.rolling_sum -= self.rolling_log_count_list[0]
+            del self.rolling_log_count_list[0]
+
         # Divide the rolling sum by the length of the counts list. Note that each entry of this list corresponds to the number of logs seen in 1 second, as an entry is filled every time the Averager polls, and the Averager polls every second. Since the size of rolling_counts_list < 121, this value will be the average number of requests over the last 2 minutes (120 seconds). 
         self.rolling_avg_val = self.rolling_sum / (len(self.rolling_log_count_list))
 
@@ -71,6 +73,10 @@ class Averager:
     """
     def check_alert_threshold(self):
         global ROLLING_LOG_ALERT_THRESHOLD
+        
+        # DEBUG LINES
+        # print(self.rolling_avg_val)
+        # print(self.rolling_log_count_list)
         
         # If we are currently not in an alert mode and the rolling average has exceeded our threshold, alert and update the alert flag to signify that we have currently exceeded the threshold. 
         if ROLLING_LOG_ALERT_THRESHOLD < self.rolling_avg_val and self.alert_flag == 0:
@@ -89,13 +95,6 @@ class Averager:
             print(" ---------------------------------- ")
             self.write_averager_out(log_ln)
             self.alert_flag = 0
-
-    """
-    Make sure that only the last 120 elements (seconds) of the log counts seen per second exist in the rolling_log_count_list.  
-    """
-    def update_rolling_counts(self):
-        if len(self.rolling_log_count_list) > 120:
-            self.rolling_log_count_list = self.rolling_log_count_list[-120:]
 
     """
     If the log_counter is in danger of overflowing and crosses the max size, reset the log counter (both the copy in the Averager, log_counter_update_per_second, and the shared log_counter in the global logIndexer which is currently being incremented by the Logger class.

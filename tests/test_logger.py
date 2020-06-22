@@ -7,6 +7,9 @@ from t_monitor import globals
 from t_monitor import logger
 import shutil
 
+"""
+This is a stub. The basic functionality of the logger is tested in the end to end test, found in traffic-monitor/end_to_end.py.
+"""
 class Testlogger(unittest.TestCase):
     def setUp(self):
         self.log_indexer = globals.LogIndexer()
